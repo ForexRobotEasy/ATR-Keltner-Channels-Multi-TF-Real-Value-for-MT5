@@ -1,0 +1,79 @@
+
+//+------------------------------------------------------------------+
+//|                                                     ATR Keltner Channels Multi TF Real Value for MT5 |
+//|                                      Copyright © 2022 forexroboteasy.com |
+//|                                                    Forex Robot Easy Team |
+//+------------------------------------------------------------------+
+
+//--- input parameters
+input int emaPeriod = 20; // Exponential Moving Average period
+input double upperBandMultiplier = 3.0; // Multiplier for the upper band
+input double lowerBandMultiplier = 3.0; // Multiplier for the lower band
+
+//--- indicator handle
+int keltnerChannelsHandle;
+
+//+------------------------------------------------------------------+
+//| Custom indicator initialization function                         |
+//+------------------------------------------------------------------+
+int OnInit()
+{
+    //--- create Keltner Channels indicator
+    string indicatorName = 'ATR Keltner Channels';
+    keltnerChannelsHandle = iCustom(_Symbol, _Period, indicatorName, emaPeriod, upperBandMultiplier, lowerBandMultiplier);
+    
+    //--- check if the indicator was successfully created
+    if(keltnerChannelsHandle == INVALID_HANDLE)
+    {
+        Print('Failed to create Keltner Channels indicator!');
+        return INIT_FAILED;
+    }
+    
+    //--- set the indicator line styles and colors
+    SetIndexStyle(0, DRAW_LINE);
+    SetIndexBuffer(0, iCustom(NULL, 0, 'ATR Keltner Channels', emaPeriod, upperBandMultiplier, lowerBandMultiplier, 1));
+    SetIndexBuffer(1, iCustom(NULL, 0, 'ATR Keltner Channels', emaPeriod, upperBandMultiplier, lowerBandMultiplier, 2));
+    SetIndexBuffer(2, iCustom(NULL, 0, 'ATR Keltner Channels', emaPeriod, upperBandMultiplier, lowerBandMultiplier, 3));
+    SetIndexStyle(1, DRAW_LINE);
+    SetIndexStyle(2, DRAW_LINE);
+    SetIndexLabel(0, 'Upper Band');
+    SetIndexLabel(1, 'EMA');
+    SetIndexLabel(2, 'Lower Band');
+    
+    return INIT_SUCCEEDED;
+}
+
+//+------------------------------------------------------------------+
+//| Custom indicator iteration function                              |
+//+------------------------------------------------------------------+
+int OnCalculate(const int rates_total,
+                const int prev_calculated,
+                const datetime &time[],
+                const double &open[],
+                const double &high[],
+                const double &low[],
+                const double &close[],
+                const long &tick_volume[],
+                const long &volume[],
+                const int &spread[])
+{
+    //--- calculate Keltner Channels
+    int calculated = IndicatorCounted();
+    int limit = rates_total - calculated;
+    
+    for(int i = 0; i < limit; i++)
+    {
+        double upperBand = iCustom(NULL, 0, 'ATR Keltner Channels', emaPeriod, upperBandMultiplier, lowerBandMultiplier, 1, i);
+        double ema = iCustom(NULL, 0, 'ATR Keltner Channels', emaPeriod, upperBandMultiplier, lowerBandMultiplier, 2, i);
+        double lowerBand = iCustom(NULL, 0, 'ATR Keltner Channels', emaPeriod, upperBandMultiplier, lowerBandMultiplier, 3, i);
+        
+        //--- plot Keltner Channels on the chart
+        SetIndexValue(0, upperBand, i);
+        SetIndexValue(1, ema, i);
+        SetIndexValue(2, lowerBand, i);
+    }
+    
+    return rates_total;
+}
+
+//+------------------------------------------------------------------+
